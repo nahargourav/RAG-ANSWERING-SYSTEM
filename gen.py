@@ -32,7 +32,7 @@ class QueryRequest(BaseModel):
     documents: str
     questions: list[str]
 
-@app.post("/hackrx/run")
+@app.post("api/v1/hackrx/run")
 async def hackrx_run(request: QueryRequest, authorization: str = Header(...)):
     pdf_text = extract_text_from_pdf(request.documents)
     answers = [ask_gpt(question, pdf_text) for question in request.questions]
@@ -61,5 +61,6 @@ def ask_gpt(question, context):
     )
 
     return response.choices[0].message.content.strip()
+
 
 
