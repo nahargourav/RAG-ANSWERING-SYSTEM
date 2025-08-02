@@ -1,7 +1,18 @@
+# Web server
 fastapi
 uvicorn
-requests
-pdfplumber
-openai>=1.3.8
+
+# HTTP client
+httpx
+
+# PDF processing
+PyMuPDF
+
+# AI and Machine Learning
+openai
+tiktoken
+faiss-cpu
+numpy
+
+# Environment variables
 python-dotenv
-pydantic
