@@ -9,6 +9,9 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # REQUIRED for Azure OIDC login
+      contents: read   # Allows repo read
 
     steps:
       - name: Checkout code
