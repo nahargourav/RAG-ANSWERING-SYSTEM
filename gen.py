@@ -10,6 +10,12 @@ load_dotenv()
 
 app = FastAPI()
 
+# health check for server working 
+@app.get("/")
+def root():
+    return {"message": "Server is working!"}
+
+
 # Azure OpenAI credentials from environment
 endpoint = os.getenv("OPENAI_API_BASE")
 deployment = os.getenv("OPENAI_DEPLOYMENT")
@@ -55,4 +61,5 @@ def ask_gpt(question, context):
     )
 
     return response.choices[0].message.content.strip()
+
 
