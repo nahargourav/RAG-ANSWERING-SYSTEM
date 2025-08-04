@@ -67,7 +67,7 @@ async def hackrx_run(request: QueryRequest, authorization: str = Header(None)):
     answers = await asyncio.gather(*[answer_question_with_pinecone(q, namespace, chunks) for q in request.questions])
     end_time = time.time()
 
-    return {"answers": answers, "total_time": end_time - start_time}
+    return {"answers": answers, }
 
 # --- RAG Core Functions ---
 async def answer_question_with_pinecone(question: str, namespace: str, chunks: list[str]):
