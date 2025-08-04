@@ -24,7 +24,7 @@ api_key = os.getenv("OPENAI_API_KEY")
 api_version = os.getenv("OPENAI_API_VERSION")
 
 if not all([endpoint, api_key, api_version, chat_deployment]):
-    raise ValueValue("Missing one or more required Azure OpenAI environment variables.")
+    raise ValueError("Missing one or more required Azure OpenAI environment variables.")
 
 client = AsyncAzureOpenAI(api_version=api_version, azure_endpoint=endpoint, api_key=api_key, max_retries=5)
 
@@ -58,8 +58,8 @@ async def hackrx_run(request: QueryRequest, authorization: str = Header(None)):
         # Extract text from PDF
         text = await extract_text_from_pdf_fast(doc_url)
         chunks = chunk_text(text)
-        # Use Pinecone Inference API for embeddings
-        chunk_embeddings = await pinecone_inference_embed(chunks)
+        # Generate embeddings using Pinecone inference (llama-text-embed-v2)
+        chunk_embeddings = await pinecone_inference_embed(chunks, input_type="passage")
         await upsert_to_pinecone(namespace, chunks, chunk_embeddings)
         document_cache[namespace] = chunks
 
@@ -67,19 +67,19 @@ async def hackrx_run(request: QueryRequest, authorization: str = Header(None)):
     answers = await asyncio.gather(*[answer_question_with_pinecone(q, namespace, chunks) for q in request.questions])
     end_time = time.time()
 
-    return {"answers": answers, }
+    return {"answers": answers, "total_time": end_time - start_time}
 
 # --- RAG Core Functions ---
 async def answer_question_with_pinecone(question: str, namespace: str, chunks: list[str]):
-    question_embedding = await pinecone_inference_embed([question])
+    question_embedding = await pinecone_inference_embed([question], input_type="query")
     relevant_chunks = await search_pinecone(question_embedding[0], namespace)
     context = "\n---\n".join(relevant_chunks)
     return await ask_gpt(question, context)
 
 async def ask_gpt(question: str, context: str) -> str:
     prompt = f"""
-    Answer the following question based *only* on the provided context.
-    If the answer is not in the context, state that the information is not available.
+    Provide a concise and accurate answer in 1-2 sentences, based only on the context.
+    If the answer is not in the context, reply: "Information not available in the document."
 
     Context:
     {context}
@@ -90,7 +90,7 @@ async def ask_gpt(question: str, context: str) -> str:
     response = await client.chat.completions.create(
         messages=[{"role": "user", "content": prompt}],
         temperature=0.0,
-        max_tokens=300,
+        max_tokens=100,  # Enforces brevity
         model=chat_deployment
     )
     return response.choices[0].message.content.strip()
@@ -132,13 +132,13 @@ def chunk_text(text: str, max_tokens: int = 1800) -> list[str]:
             final_chunks.append(p)
     return [chunk.strip() for chunk in final_chunks if chunk.strip()]
 
-async def pinecone_inference_embed(texts: list[str]) -> np.ndarray:
+async def pinecone_inference_embed(texts: list[str], input_type: str = "passage", dimension: int = 1024) -> np.ndarray:
     embeddings = pc.inference.embed(
-        "llama-text-embed-v2",
+        model="llama-text-embed-v2",
         inputs=texts,
         parameters={
-            "input_type": "passage" if len(texts) > 1 else "query",  # 'passage' for documents, 'query' for single questions
-            "dimension": 1024,  # Match your index dimension
+            "input_type": input_type,  # 'passage' for documents, 'query' for questions
+            "dimension": dimension,
             "truncate": "END"
         }
     )
