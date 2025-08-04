@@ -64,8 +64,8 @@ async def hackrx_run(request: QueryRequest, authorization: str = Header(None)):
 async def ask_gpt(question: str, context: str) -> str:
     prompt = f"""
     You are a helpful assistant. 
-    Answer the following question in a short, clear, and complete way (1–2 sentences maximum).
-    Use only the provided context. If the answer is not present, reply: \"Information not available in the document.\"
+    Answer the following question based *only* on the provided context.
+    If the answer is not in the context, state that the information is not available.\"
 
     Context:
     {context}
