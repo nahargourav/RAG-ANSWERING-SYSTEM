@@ -7,12 +7,17 @@ httpx
 
 # PDF processing
 PyMuPDF
+pdfplumber
 
 # AI and Machine Learning
 openai
 tiktoken
 faiss-cpu
 numpy
+scikit-learn
+pinecone
+pydantic
 
 # Environment variables
 python-dotenv
+
