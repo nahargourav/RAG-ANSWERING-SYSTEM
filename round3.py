@@ -31,7 +31,7 @@ if not all([endpoint, api_key, api_version, chat_deployment, embedding_deploymen
 client = AsyncAzureOpenAI(api_version=api_version, azure_endpoint=endpoint, api_key=api_key, max_retries=5)
 
 # --- MongoDB Setup ---
-mongo_uri = os.getenv("MONGO_URI", "mongodb+srv://gouravnahar3008:fM5BY3RIa0OUAifl@cluster0.junmus8.mongodb.net/")
+mongo_uri = os.getenv("MONGO_URI")
 mongo_client = MongoClient(mongo_uri)
 try:
     mongo_client.admin.command('ping')
@@ -113,8 +113,8 @@ async def answer_question_with_rag(question: str, chunks: list[str], faiss_index
 
 async def ask_gpt(question: str, context: str) -> str:
     prompt = f"""
-    Answer the following question based *only* on the provided context.
-    If the answer is not in the context, state that the information is not available.
+    Provide a concise and accurate answer in 1-2 sentences, based only on the context.
+    If the answer is not in the context, reply: "Information not available in the document."
 
     Context:
     {context}
