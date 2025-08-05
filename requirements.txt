@@ -21,3 +21,7 @@ pydantic
 # Environment variables
 python-dotenv
 
+
+#database
+pymongo
+
