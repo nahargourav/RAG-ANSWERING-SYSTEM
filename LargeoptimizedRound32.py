@@ -39,7 +39,7 @@ try:
 except Exception as e:
     print("❌ Connection failed:", e)
 db = mongo_client["hackrx_logs"]
-collection = db["CheckRequest"]
+collection = db["requests"]
 
 # --- Pydantic Models & Cache ---
 class QueryRequest(BaseModel):
