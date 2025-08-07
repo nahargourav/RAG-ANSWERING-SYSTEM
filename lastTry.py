@@ -2,7 +2,6 @@ import asyncio
 import io
 import os
 import time
-
 import faiss
 import fitz  # PyMuPDF
 import httpx
