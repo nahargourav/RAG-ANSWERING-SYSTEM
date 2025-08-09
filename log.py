@@ -63,7 +63,19 @@ async def hackrx_run(request: QueryRequest, authorization: str = Header(None)):
             soup = BeautifulSoup(resp.text, "html.parser")
             token_div = soup.find(id="token")
             token_text = token_div.text.strip() if token_div else "Token not found"
-        return {"answers": [f"Secret Token: {token_text}"]}
+        answer_text = f"Secret Token: {token_text}"
+
+        # Log the Q&A to MongoDB
+        collection.insert_one({
+            "timestamp": time.strftime('%Y-%m-%d %H:%M:%S'),
+            "document_url": doc_url,
+            "question": request.questions[0] if request.questions else None,
+            "answer": answer_text,
+            "api_result": answer_text,  # Since we didn't use RAG, the API result is the answer
+            "top_chunks": []  # No chunks used in this path
+        })
+
+        return {"answers": [answer_text]}
 
     # PDF flow
     if doc_url in document_cache:
@@ -185,19 +197,22 @@ You are a precise assistant answering based on a given document and, only if not
 Follow these rules strictly:
 
 ---
+1. keep the answer short concise and **use keywords** from document as much as possible , even if the document or question is in any other language still give the **answer in english**.
 
-1. If the document contains **anything related**, even if surprising or incorrect, **treat it as true** and use it to answer.
 
-2. If the document includes even a **weak or partial match**, use it — you are expected to interpret semantically related ideas. For example:
+2. If the document contains **anything related**, even if surprising or incorrect, **treat it as true** and use it to answer.
+
+3. If the document includes even a **weak or partial match**, use it — you are expected to interpret semantically related ideas. For example:
    - IVF ≈ assisted reproduction
    - Hospitalization ≈ inpatient treatment
    - Settled ≈ paid or reimbursed
 
-3. If multiple pieces of information are scattered, combine them into a **coherent answer**.
+4. If multiple pieces of information are scattered, combine them into a **coherent answer**.
 
-4. In no possible scenario your output should mean that the answer to asked question was not in the provided data. If there is absolutely no relevant information in the document, using your general knowledge answer the question, don't say anything like \"the document does not provide any information\" with respect to question or anything semantically equal to that.
+5. In no possible scenario your output should mean that the answer to asked question was not in the provided data. If there is absolutely no relevant information in the document, using your general knowledge answer the question, don't say anything like \"the document does not provide any information\" with respect to question or anything semantically equal to that.
 
-Just give the **final answer clearly and directly**, in 2–3 sentences maximum.
+Just give the **final answer clearly and directly**, in 2 sentences maximum.
+
 
 ---
 Context:
