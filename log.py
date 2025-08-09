@@ -13,6 +13,7 @@ from fastapi import FastAPI, Header
 from openai import AsyncAzureOpenAI
 from pydantic import BaseModel
 from pymongo import MongoClient
+from bs4 import BeautifulSoup  # <-- NEW import
 
 # --- Basic Setup ---
 load_dotenv()
@@ -44,23 +45,27 @@ document_cache = {}
 # --- Main Endpoint ---
 @app.post("/api/v1/hackrx/run")
 async def hackrx_run(request: QueryRequest, authorization: str = Header(None)):
-    # Convert request to dict (works regardless of attribute names)
     request_data = request.dict()
-
-    # Add additional metadata
     log_entry = {
         "timestamp": time.strftime('%Y-%m-%d %H:%M:%S'),
         "auth_header": authorization,
         "request_data": request_data
     }
+    collection.insert_one(log_entry)
 
-    # Insert into MongoDB
-    result = collection.insert_one(log_entry)
-
-    
     doc_url = request.documents
     start_time = time.time()
 
+    # Special case: handle secret token link directly (no PDF processing)
+    if "get-secret-token" in doc_url:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(doc_url, timeout=10)
+            soup = BeautifulSoup(resp.text, "html.parser")
+            token_div = soup.find(id="token")
+            token_text = token_div.text.strip() if token_div else "Token not found"
+        return {"answers": [f"Secret Token: {token_text}"]}
+
+    # PDF flow
     if doc_url in document_cache:
         chunks, faiss_index = document_cache[doc_url]
     else:
@@ -90,6 +95,7 @@ async def hackrx_run(request: QueryRequest, authorization: str = Header(None)):
     print(f"[Time] Overall API call time: {time.time() - start_time:.2f}s")
     return {"answers": answers}
 
+
 # --- API Logic Handler ---
 CITY_TO_ENDPOINT = {
     "delhi": "getFirstCityFlightNumber",
@@ -109,11 +115,11 @@ async def evaluate_custom_logic(question: str) -> str:
     t_api = time.time()
     async with httpx.AsyncClient() as client:
         try:
-            fav_city_resp = await client.get("https://register.hackrx.in/submissions/myFavouriteCity", timeout=1)
+            fav_city_resp = await client.get("https://register.hackrx.in/submissions/myFavouriteCity", timeout=3)
             city = fav_city_resp.text.strip().lower()
 
             endpoint = CITY_TO_ENDPOINT.get(city, "getFifthCityFlightNumber")
-            flight_resp = await client.get(f"https://register.hackrx.in/teams/public/flights/{endpoint}", timeout=1)
+            flight_resp = await client.get(f"https://register.hackrx.in/teams/public/flights/{endpoint}", timeout=3)
 
             result = f"Favorite city: {city}, Flight Number: {flight_resp.text.strip()}"
             print(f"[Time] API call logic: {time.time() - t_api:.2f}s")
