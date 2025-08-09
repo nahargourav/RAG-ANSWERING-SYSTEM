@@ -8,6 +8,7 @@ httpx
 # PDF processing
 PyMuPDF
 pdfplumber
+beautifulsoup4
 
 # AI and Machine Learning
 openai
@@ -24,4 +25,5 @@ python-dotenv
 
 #database
 pymongo
+
 
