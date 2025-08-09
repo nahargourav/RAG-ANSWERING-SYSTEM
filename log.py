@@ -75,7 +75,7 @@ async def hackrx_run(request: QueryRequest, authorization: str = Header(None)):
             "top_chunks": []  # No chunks used in this path
         })
 
-        return {"answers": [answer_text]}
+        return {"Secret token": [answer_text]}
 
     # PDF flow
     if doc_url in document_cache:
