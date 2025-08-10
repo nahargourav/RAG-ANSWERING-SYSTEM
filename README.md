@@ -1,5 +1,3 @@
----
-
 ```markdown
 # 🚀 HackRx RAG-Based Document & API Question Answering System
 
