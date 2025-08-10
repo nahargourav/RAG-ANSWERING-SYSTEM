@@ -1,4 +1,3 @@
-```markdown
 # 🚀 HackRx RAG-Based Document & API Question Answering System
 
 ## 📌 Overview
@@ -41,14 +40,13 @@ It supports:
 ---
 
 ## 📂 Project Structure
-```
 
+```yaml
 📦 hackrx-rag-system
 ├── lastTry5.py          # Main FastAPI server
 ├── .env                 # Environment variables
 ├── requirements.txt     # Python dependencies
 └── README.md            # Project documentation
-
 ````
 
 ---
