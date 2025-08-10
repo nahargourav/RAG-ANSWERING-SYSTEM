@@ -43,7 +43,7 @@ It supports:
 
 ```yaml
 📦 hackrx-rag-system
-├── lastTry5.py          # Main FastAPI server
+├── log.py               # Main FastAPI server
 ├── .env                 # Environment variables
 ├── requirements.txt     # Python dependencies
 └── README.md            # Project documentation
@@ -56,7 +56,6 @@ It supports:
 ### 1️⃣ Clone the Repository
 ```bash
 git clone https://github.com/nahargourav/rajbhog.git
-cd hackrx-rag-system
 ````
 
 ### 2️⃣ Create a Virtual Environment
