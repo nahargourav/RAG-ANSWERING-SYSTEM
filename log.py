@@ -2,7 +2,7 @@ import asyncio
 import io
 import os
 import time
-
+import re 
 import faiss
 import fitz  # PyMuPDF
 import httpx
@@ -109,15 +109,6 @@ async def hackrx_run(request: QueryRequest, authorization: str = Header(None)):
 
 
 # --- API Logic Handler ---
-CITY_TO_ENDPOINT = {
-    "delhi": "getFirstCityFlightNumber",
-    "hyderabad": "getSecondCityFlightNumber",
-    "paris": "getSecondCityFlightNumber",
-    "new york": "getThirdCityFlightNumber",
-    "tokyo": "getFourthCityFlightNumber",
-    "istanbul": "getFourthCityFlightNumber",
-    # All others default to fifth
-}
 
 async def evaluate_custom_logic(question: str) -> str:
     keywords = ["flight", "api", "city", "landmark"]
@@ -127,13 +118,40 @@ async def evaluate_custom_logic(question: str) -> str:
     t_api = time.time()
     async with httpx.AsyncClient() as client:
         try:
-            fav_city_resp = await client.get("https://register.hackrx.in/submissions/myFavouriteCity", timeout=3)
-            city = fav_city_resp.text.strip().lower()
+            fav_city_resp = await client.get(
+                "https://register.hackrx.in/submissions/myFavouriteCity",
+                timeout=3
+            )
 
-            endpoint = CITY_TO_ENDPOINT.get(city, "getFifthCityFlightNumber")
-            flight_resp = await client.get(f"https://register.hackrx.in/teams/public/flights/{endpoint}", timeout=3)
+            fav_city_resp.raise_for_status()
+            city_data = fav_city_resp.json()  # Parse JSON properly
 
-            result = f"Favorite city: {city}, Flight Number: {flight_resp.text.strip()}"
+            raw_city = city_data["data"]["city"]  # Get just the city name
+            print(f"[DEBUG] Raw city from API: {repr(raw_city)}")
+
+            # Normalize key
+            city_key = re.sub(r"\s+", "", raw_city.strip().lower())
+            print(f"[DEBUG] Normalized city key: {city_key}")
+
+            CITY_TO_ENDPOINT = {
+                "delhi": "getFirstCityFlightNumber",
+                "hyderabad": "getSecondCityFlightNumber",
+                "paris": "getSecondCityFlightNumber",
+                "newyork": "getThirdCityFlightNumber",
+                "tokyo": "getFourthCityFlightNumber",
+                "istanbul": "getFourthCityFlightNumber",
+            }
+
+            endpoint = CITY_TO_ENDPOINT.get(city_key, "getFifthCityFlightNumber")
+            print(f"[DEBUG] Selected endpoint: {endpoint}")
+
+            flight_resp = await client.get(
+                f"https://register.hackrx.in/teams/public/flights/{endpoint}",
+                timeout=3
+            )
+
+            result = f"Favorite city: {raw_city}, Flight Number: {flight_resp.text.strip()}"
+            print(result)
             print(f"[Time] API call logic: {time.time() - t_api:.2f}s")
             return result
         except Exception as e:
