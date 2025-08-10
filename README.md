@@ -1,8 +1,8 @@
-# 🚀 HackRx RAG-Based Document & API Question Answering System
+# 🚀 RAG-Based Document & API Question Answering System
 
 ## 📌 Overview
 This project is a **Retrieval-Augmented Generation (RAG)** system built with **FastAPI**, **FAISS**, **Azure OpenAI**, and **MongoDB**.  
-It processes PDF documents and API endpoints to answer user queries with high accuracy, following **HackRx** competition instructions.  
+It processes PDF documents and API endpoints to answer user queries with high accuracy.  
 
 It supports:
 - 📄 **PDF document ingestion and semantic search**
