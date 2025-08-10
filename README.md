@@ -55,7 +55,7 @@ It supports:
 
 ### 1️⃣ Clone the Repository
 ```bash
-git clone https://github.com/nahargourav/rajbhog.git
+git clone https://github.com/nahargourav/RAG-ANSWERING-SYSTEM.git
 ````
 
 ### 2️⃣ Create a Virtual Environment
